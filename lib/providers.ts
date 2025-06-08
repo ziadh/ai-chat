@@ -8,7 +8,6 @@ export const providers = {
     models: {
       "gpt-4o": "GPT-4o",
       "gpt-4o-mini": "GPT-4o Mini",
-      "gpt-4-turbo": "GPT-4 Turbo",
     },
     getModel: (model: string) => openai(model),
   },
