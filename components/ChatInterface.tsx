@@ -148,13 +148,11 @@ export function ChatInterface({ chatId, onChatCreated, onChatUpdated, onTitleGen
       });
       
       if (response.ok && onChatUpdated) {
-        console.log('🔄 Notifying parent component of title update');
-        // Update the title silently first, then trigger typing animation
+        console.log('🔄 Starting typing animation and updating title');
+        // Start typing animation first, then update the title data
+        onTitleGenerating?.(chatId, true);
+        // Update the title data immediately after (the typing animation will handle the display)
         onChatUpdated(chatId, { title: newTitle });
-        // Now trigger the typing animation for the new title
-        setTimeout(() => {
-          onTitleGenerating?.(chatId, true);
-        }, 100); // Small delay to ensure title is updated first
       } else {
         console.log('❌ Failed to update title in database');
       }
