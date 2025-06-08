@@ -27,6 +27,13 @@ export const authOptions: NextAuthOptions = {
       }
       return token;
     },
+    redirect: async ({ url, baseUrl }) => {
+      // Allows relative callback URLs
+      if (url.startsWith("/")) return `${baseUrl}${url}`;
+      // Allows callback URLs on the same origin
+      if (new URL(url).origin === baseUrl) return url;
+      return baseUrl;
+    },
   },
   session: {
     strategy: "jwt",
@@ -34,5 +41,24 @@ export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
   pages: {
     signIn: "/auth/signin",
+    error: "/auth/signin", // Redirect errors to signin page
+  },
+  debug: process.env.NODE_ENV === "development",
+  events: {
+    signIn: async (message) => {
+      console.log("Sign in event:", message);
+    },
+    signOut: async (message) => {
+      console.log("Sign out event:", message);
+    },
+    createUser: async (message) => {
+      console.log("Create user event:", message);
+    },
+    linkAccount: async (message) => {
+      console.log("Link account event:", message);
+    },
+    session: async (message) => {
+      console.log("Session event:", message);
+    },
   },
 };
