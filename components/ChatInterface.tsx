@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useChat } from "ai/react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -195,26 +195,7 @@ export function ChatInterface({ chatId, onChatCreated, onChatUpdated, onTitleGen
     handleSubmit(e);
   };
 
-  useEffect(() => {
-    if (chatId !== currentChatId) {
-      setCurrentChatId(chatId);
-      chatIdRef.current = chatId; // Update ref when chat ID changes
-      setHasUpdatedTitle(false);
-      if (chatId) {
-        loadChatMessages(chatId);
-      } else {
-        setMessages([]);
-      }
-    }
-  }, [chatId]);
-
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [messages]);
-
-  const loadChatMessages = async (id: string) => {
+  const loadChatMessages = useCallback(async (id: string) => {
     try {
       const response = await fetch(`/api/chats/${id}`);
       if (response.ok) {
@@ -234,7 +215,24 @@ export function ChatInterface({ chatId, onChatCreated, onChatUpdated, onTitleGen
     } catch (error) {
       console.error("Failed to load chat:", error);
     }
-  };
+  }, [setMessages, setProvider, setModel, setHasUpdatedTitle]);
+
+  useEffect(() => {
+    setCurrentChatId(chatId);
+    chatIdRef.current = chatId; // Update ref when chat ID changes
+    setHasUpdatedTitle(false);
+    if (chatId) {
+      loadChatMessages(chatId);
+    } else {
+      setMessages([]);
+    }
+  }, [chatId, loadChatMessages, setMessages]);
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages]);
 
   if (status === "loading") {
     return (
