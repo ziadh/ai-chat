@@ -11,9 +11,31 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Github, Chrome } from "lucide-react";
+import { Github, Chrome, Moon, Sun } from "lucide-react";
+import { ThemeProvider, useTheme } from "@/lib/theme-context";
 
-export default function SignIn() {
+function ThemeToggle() {
+  const { theme, toggleTheme, mounted } = useTheme();
+
+  return (
+    <Button
+      variant="ghost"
+      size="icon"
+      onClick={toggleTheme}
+      className="h-8 w-8"
+      title={`Switch to ${theme === "light" ? "dark" : "light"} mode`}
+      disabled={!mounted}
+    >
+      {theme === "light" ? (
+        <Moon className="h-4 w-4" />
+      ) : (
+        <Sun className="h-4 w-4" />
+      )}
+    </Button>
+  );
+}
+
+function SignInContent() {
   const [providers, setProviders] = useState<any>(null);
 
   useEffect(() => {
@@ -36,7 +58,13 @@ export default function SignIn() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-background">
+    <div className="flex items-center justify-center min-h-screen bg-background relative">
+      {/* Header with branding and theme toggle */}
+      <div className="absolute top-0 left-0 right-0 p-4 flex items-center justify-between">
+        <h1 className="text-lg font-semibold">LLM Chat</h1>
+        <ThemeToggle />
+      </div>
+      
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle>Welcome to LLM Chat</CardTitle>
@@ -60,5 +88,13 @@ export default function SignIn() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function SignIn() {
+  return (
+    <ThemeProvider>
+      <SignInContent />
+    </ThemeProvider>
   );
 }
