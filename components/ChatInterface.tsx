@@ -48,12 +48,12 @@ export function ChatInterface({ chatId, onChatCreated }: ChatInterfaceProps) {
           const response = await fetch("/api/chats", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ title, provider, model }),
+            body: JSON.stringify({ title, provider, modelName: model }),
           });
           if (response.ok) {
             const newChat = await response.json();
-            setCurrentChatId(newChat.id);
-            onChatCreated(newChat.id);
+            setCurrentChatId(newChat._id);
+            onChatCreated(newChat._id);
           }
         } catch (error) {
           console.error("Failed to create chat:", error);
@@ -84,14 +84,14 @@ export function ChatInterface({ chatId, onChatCreated }: ChatInterfaceProps) {
       const response = await fetch(`/api/chats/${id}`);
       if (response.ok) {
         const chat = await response.json();
-        const formattedMessages = chat.messages.map((msg: any) => ({
-          id: msg.id,
+        const formattedMessages = chat.messages.map((msg: any, index: number) => ({
+          id: msg._id || `msg-${index}`,
           role: msg.role,
           content: msg.content,
         }));
         setMessages(formattedMessages);
         setProvider(chat.provider);
-        setModel(chat.model);
+        setModel(chat.modelName);
       }
     } catch (error) {
       console.error("Failed to load chat:", error);
@@ -131,9 +131,9 @@ export function ChatInterface({ chatId, onChatCreated }: ChatInterfaceProps) {
               <p>Start a conversation with your AI assistant</p>
             </div>
           ) : (
-            messages.map((message) => (
+            messages.map((message, index) => (
               <div
-                key={message.id}
+                key={message.id || `message-${index}`}
                 className={`flex items-start gap-3 ${
                   message.role === "user" ? "justify-end" : "justify-start"
                 }`}

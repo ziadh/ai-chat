@@ -10,10 +10,10 @@ import { Button } from "./ui/button";
 import { ScrollArea } from "./ui/scroll-area";
 
 interface Chat {
-  id: string;
+  _id: string;
   title: string;
   provider: string;
-  model: string;
+  modelName: string;
   createdAt: string;
   messages: unknown[];
 }
@@ -60,7 +60,7 @@ export function ChatSidebar({
         method: "DELETE",
       });
       if (response.ok) {
-        setChats(chats.filter((chat) => chat.id !== chatId));
+        setChats(chats.filter((chat) => chat._id !== chatId));
         if (currentChatId === chatId) {
           onNewChat();
         }
@@ -92,13 +92,13 @@ export function ChatSidebar({
           ) : (
             chats.map((chat) => (
               <div
-                key={chat.id}
+                key={chat._id}
                 className={cn(
                   "group flex items-center justify-between p-3 rounded-lg cursor-pointer hover:bg-gray-100 mb-1",
-                  currentChatId === chat.id &&
+                  currentChatId === chat._id &&
                     "bg-blue-50 border border-blue-200"
                 )}
-                onClick={() => onChatSelect(chat.id)}
+                onClick={() => onChatSelect(chat._id)}
               >
                 <div className="flex items-center flex-1 min-w-0">
                   <MessageSquare className="w-4 h-4 mr-2 text-gray-400" />
@@ -107,7 +107,7 @@ export function ChatSidebar({
                       {chat.title}
                     </div>
                     <div className="text-xs text-gray-500">
-                      {chat.provider} • {chat.model}
+                      {chat.provider} • {chat.modelName}
                     </div>
                   </div>
                 </div>
@@ -116,7 +116,7 @@ export function ChatSidebar({
                   size="sm"
                   className="opacity-0 group-hover:opacity-100 h-6 w-6 p-0"
                   onClick={(e: React.MouseEvent<HTMLButtonElement>) =>
-                    deleteChat(chat.id, e)
+                    deleteChat(chat._id, e)
                   }
                 >
                   <Trash2 className="w-3 h-3" />
