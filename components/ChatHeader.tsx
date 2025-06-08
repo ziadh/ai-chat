@@ -14,7 +14,7 @@ import {
 import { useTheme } from "@/lib/theme-context";
 
 export function ChatHeader() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const { theme, toggleTheme, mounted } = useTheme();
 
   const handleSignOut = () => {
@@ -48,33 +48,41 @@ export function ChatHeader() {
           variant="ghost"
           size="icon"
           onClick={toggleTheme}
-          className="h-8 w-8"
+          className="h-8 w-8 transition-all duration-200"
           title={`Switch to ${theme === "light" ? "dark" : "light"} mode`}
           disabled={!mounted}
         >
-          {theme === "light" ? (
-            <Moon className="h-4 w-4" />
-          ) : (
-            <Sun className="h-4 w-4" />
+          {/* Use opacity to prevent icon flash during mount */}
+          <div className={`transition-opacity duration-200 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
+            {theme === "light" ? (
+              <Moon className="h-4 w-4" />
+            ) : (
+              <Sun className="h-4 w-4" />
+            )}
+          </div>
+          {/* Show a neutral icon while mounting */}
+          {!mounted && (
+            <div className="h-4 w-4 rounded-full bg-muted-foreground/20" />
           )}
         </Button>
 
         {/* User Account Menu */}
-        {session?.user && (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 rounded-full p-0">
-                <Avatar className="h-8 w-8">
-                  <AvatarImage 
-                    src={session.user.image || undefined} 
-                    alt={session.user.name || "User"} 
-                  />
-                  <AvatarFallback className="text-xs">
-                    {getUserInitials(session.user.name)}
-                  </AvatarFallback>
-                </Avatar>
-              </Button>
-            </DropdownMenuTrigger>
+        <div className={`transition-opacity duration-200 ${status === "authenticated" ? 'opacity-100' : 'opacity-0'}`}>
+          {session?.user && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="h-8 w-8 rounded-full p-0">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage 
+                      src={session.user.image || undefined} 
+                      alt={session.user.name || "User"} 
+                    />
+                    <AvatarFallback className="text-xs">
+                      {getUserInitials(session.user.name)}
+                    </AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
               <div className="flex items-center gap-2 p-2">
                 <Avatar className="h-8 w-8">
@@ -103,6 +111,7 @@ export function ChatHeader() {
             </DropdownMenuContent>
           </DropdownMenu>
         )}
+        </div>
       </div>
     </header>
   );

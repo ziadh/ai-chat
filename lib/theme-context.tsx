@@ -17,19 +17,30 @@ const ThemeContext = createContext<ThemeContextType>({
 });
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>("light");
+  const [theme, setTheme] = useState<Theme>(() => {
+    // Initialize with the actual theme from the DOM to prevent mismatches
+    if (typeof window !== 'undefined') {
+      return document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+    }
+    return 'light';
+  });
   const [mounted, setMounted] = useState(false);
 
+  // Mount effect - runs only once
   useEffect(() => {
     // Check localStorage and system preference on mount
     const savedTheme = localStorage.getItem("theme") as Theme;
     const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
     const initialTheme = savedTheme || systemTheme;
     
-    setTheme(initialTheme);
+    // Only set theme if it's different from what's already applied
+    if (initialTheme !== theme) {
+      setTheme(initialTheme);
+    }
     setMounted(true);
-  }, []);
+  }, []); // No dependencies - only run on mount
 
+  // Theme application effect - runs when theme changes
   useEffect(() => {
     // Apply theme to document
     const root = document.documentElement;

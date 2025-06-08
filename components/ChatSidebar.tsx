@@ -30,17 +30,38 @@ export interface ChatSidebarRef {
   refreshChats: () => void;
 }
 
+// Skeleton loader component for better loading states
+const ChatItemSkeleton = () => (
+  <div className="p-3 rounded-lg mb-1 animate-pulse">
+    <div className="flex items-center">
+      <div className="w-4 h-4 bg-muted rounded mr-2"></div>
+      <div className="flex-1">
+        <div className="h-4 bg-muted rounded w-3/4 mb-1"></div>
+        <div className="h-3 bg-muted rounded w-1/2"></div>
+      </div>
+    </div>
+  </div>
+);
+
 export const ChatSidebar = forwardRef<ChatSidebarRef, ChatSidebarProps>(
   ({ currentChatId, onChatSelect, onNewChat }, ref) => {
     const { data: session, status } = useSession();
     const [chats, setChats] = useState<Chat[]>([]);
     const [loading, setLoading] = useState(true);
+    const [mounted, setMounted] = useState(false);
+
+    // Track mounted state to prevent hydration issues
+    useEffect(() => {
+      setMounted(true);
+    }, []);
 
     useEffect(() => {
       if (session?.user) {
         fetchChats();
+      } else if (status === "unauthenticated") {
+        setLoading(false);
       }
-    }, [session]);
+    }, [session, status]);
 
     const fetchChats = async () => {
       try {
@@ -91,71 +112,92 @@ export const ChatSidebar = forwardRef<ChatSidebarRef, ChatSidebarProps>(
       refreshChats: fetchChats,
     }));
 
-    if (status === "loading") {
+    // Stable sidebar structure that doesn't change layout
+    const renderSidebarContent = () => {
+      // Show loading skeletons during initial load
+      if (!mounted || status === "loading" || (status === "authenticated" && loading)) {
+        return (
+          <div className="p-2">
+            <ChatItemSkeleton />
+            <ChatItemSkeleton />
+            <ChatItemSkeleton />
+          </div>
+        );
+      }
+
+      // Show empty state for unauthenticated users (but keep structure)
+      if (status === "unauthenticated") {
+        return (
+          <div className="p-2">
+            <div className="text-center text-muted-foreground py-8 text-sm">
+              Sign in to view chats
+            </div>
+          </div>
+        );
+      }
+
+      // Show chats or empty state
+      if (chats.length === 0) {
+        return (
+          <div className="p-2">
+            <div className="text-center text-muted-foreground py-8 text-sm">
+              No chats yet
+            </div>
+          </div>
+        );
+      }
+
       return (
-        <div className="w-64 bg-sidebar border-r border-sidebar-border flex flex-col">
-          <div className="p-4 border-b border-sidebar-border">
-            <div className="w-full h-10 bg-muted rounded animate-pulse"></div>
-          </div>
-          <div className="flex-1 p-2">
-            <div className="text-center text-muted-foreground py-4">Loading...</div>
-          </div>
+        <div className="p-2">
+          {chats.map((chat) => (
+            <div
+              key={chat._id}
+              className={cn(
+                "group flex items-center justify-between p-3 rounded-lg cursor-pointer hover:bg-sidebar-accent mb-1 transition-colors duration-200",
+                currentChatId === chat._id &&
+                  "bg-sidebar-accent border border-sidebar-border"
+              )}
+              onClick={() => onChatSelect(chat._id)}
+            >
+              <div className="flex items-center flex-1 min-w-0">
+                <MessageSquare className="w-4 h-4 mr-2 text-muted-foreground flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium truncate">
+                    {chat.title}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    {chat.provider} • {chat.modelName}
+                  </div>
+                </div>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="opacity-0 group-hover:opacity-100 h-6 w-6 p-0 transition-opacity duration-200"
+                onClick={(e: React.MouseEvent<HTMLButtonElement>) =>
+                  deleteChat(chat._id, e)
+                }
+              >
+                <Trash2 className="w-3 h-3" />
+              </Button>
+            </div>
+          ))}
         </div>
       );
-    }
-
-    if (status === "unauthenticated") {
-      return null;
-    }
+    };
 
     return (
-      <div className="w-64 bg-sidebar border-r border-sidebar-border flex flex-col">
+      <div className="w-64 bg-sidebar border-r border-sidebar-border flex flex-col min-h-0">
         <ScrollArea className="flex-1">
-          <div className="p-2">
-            {loading ? (
-              <div className="text-center text-muted-foreground py-4">Loading...</div>
-            ) : chats.length === 0 ? (
-              <div className="text-center text-muted-foreground py-4">No chats yet</div>
-            ) : (
-              chats.map((chat) => (
-                <div
-                  key={chat._id}
-                  className={cn(
-                    "group flex items-center justify-between p-3 rounded-lg cursor-pointer hover:bg-sidebar-accent mb-1",
-                    currentChatId === chat._id &&
-                      "bg-sidebar-accent border border-sidebar-border"
-                  )}
-                  onClick={() => onChatSelect(chat._id)}
-                >
-                  <div className="flex items-center flex-1 min-w-0">
-                    <MessageSquare className="w-4 h-4 mr-2 text-muted-foreground" />
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium truncate">
-                        {chat.title}
-                      </div>
-                                              <div className="text-xs text-muted-foreground">
-                        {chat.provider} • {chat.modelName}
-                      </div>
-                    </div>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="opacity-0 group-hover:opacity-100 h-6 w-6 p-0"
-                    onClick={(e: React.MouseEvent<HTMLButtonElement>) =>
-                      deleteChat(chat._id, e)
-                    }
-                  >
-                    <Trash2 className="w-3 h-3" />
-                  </Button>
-                </div>
-              ))
-            )}
-          </div>
+          {renderSidebarContent()}
         </ScrollArea>
 
-        <div className="p-4 border-t border-sidebar-border">
-          <Button onClick={onNewChat} className="w-full">
+        <div className="p-4 border-t border-sidebar-border flex-shrink-0">
+          <Button 
+            onClick={onNewChat} 
+            className="w-full transition-all duration-200"
+            disabled={!mounted || status !== "authenticated"}
+          >
             <Plus className="w-4 h-4 mr-2" />
             New Chat
           </Button>

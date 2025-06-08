@@ -22,14 +22,21 @@ function ThemeToggle() {
       variant="ghost"
       size="icon"
       onClick={toggleTheme}
-      className="h-8 w-8"
+      className="h-8 w-8 transition-all duration-200"
       title={`Switch to ${theme === "light" ? "dark" : "light"} mode`}
       disabled={!mounted}
     >
-      {theme === "light" ? (
-        <Moon className="h-4 w-4" />
-      ) : (
-        <Sun className="h-4 w-4" />
+      {/* Use opacity to prevent icon flash during mount */}
+      <div className={`transition-opacity duration-200 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
+        {theme === "light" ? (
+          <Moon className="h-4 w-4" />
+        ) : (
+          <Sun className="h-4 w-4" />
+        )}
+      </div>
+      {/* Show a neutral icon while mounting */}
+      {!mounted && (
+        <div className="h-4 w-4 rounded-full bg-muted-foreground/20" />
       )}
     </Button>
   );
