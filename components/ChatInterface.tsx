@@ -5,9 +5,11 @@ import { useState, useEffect, useRef } from "react";
 import { useChat } from "ai/react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { Send, User, Bot } from "lucide-react";
+import { Send } from "lucide-react";
 import type { ProviderKey } from "@/lib/providers";
 import { ProviderSelector } from "./ProviderSelector";
+import { ProviderLogo } from "./ProviderLogo";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
 import { Card } from "./ui/card";
 import { ScrollArea } from "./ui/scroll-area";
@@ -29,7 +31,7 @@ interface ChatInterfaceProps {
 }
 
 export function ChatInterface({ chatId, onChatCreated, onChatUpdated }: ChatInterfaceProps) {
-  const { status } = useSession();
+  const { data: session, status } = useSession();
   const router = useRouter();
   const [provider, setProvider] = useState<ProviderKey>("openai");
   const [model, setModel] = useState("gpt-4o");
@@ -38,6 +40,17 @@ export function ChatInterface({ chatId, onChatCreated, onChatUpdated }: ChatInte
   );
   const [hasUpdatedTitle, setHasUpdatedTitle] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Helper function to get user initials
+  const getUserInitials = (name?: string | null) => {
+    if (!name) return "U";
+    return name
+      .split(" ")
+      .map(word => word[0])
+      .join("")
+      .substring(0, 2)
+      .toUpperCase();
+  };
 
   const {
     messages,
@@ -221,7 +234,9 @@ export function ChatInterface({ chatId, onChatCreated, onChatUpdated }: ChatInte
         <div className="space-y-4">
           {messages.length === 0 ? (
             <div className="text-center text-muted-foreground py-8">
-              <Bot className="w-12 h-12 mx-auto mb-4 text-muted-foreground/50" />
+              <div className="flex justify-center mb-4">
+                <ProviderLogo provider={provider} className="w-12 h-12" />
+              </div>
               <p>Start a conversation with your AI assistant</p>
             </div>
           ) : (
@@ -233,9 +248,7 @@ export function ChatInterface({ chatId, onChatCreated, onChatUpdated }: ChatInte
                 }`}
               >
                 {message.role === "assistant" && (
-                  <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
-                    <Bot className="w-4 h-4 text-primary-foreground" />
-                  </div>
+                  <ProviderLogo provider={provider} className="w-8 h-8" />
                 )}
                 <div
                   className={`max-w-[70%] p-3 rounded-lg ${
@@ -247,18 +260,22 @@ export function ChatInterface({ chatId, onChatCreated, onChatUpdated }: ChatInte
                   <div className="whitespace-pre-wrap">{message.content}</div>
                 </div>
                 {message.role === "user" && (
-                  <div className="w-8 h-8 rounded-full bg-muted-foreground flex items-center justify-center">
-                    <User className="w-4 h-4 text-muted" />
-                  </div>
+                  <Avatar className="w-8 h-8">
+                    <AvatarImage 
+                      src={session?.user?.image || undefined} 
+                      alt={session?.user?.name || "User"} 
+                    />
+                    <AvatarFallback className="text-xs">
+                      {getUserInitials(session?.user?.name)}
+                    </AvatarFallback>
+                  </Avatar>
                 )}
               </div>
             ))
           )}
           {isLoading && (
             <div className="flex items-start gap-3">
-              <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
-                <Bot className="w-4 h-4 text-primary-foreground" />
-              </div>
+              <ProviderLogo provider={provider} className="w-8 h-8" />
               <div className="bg-muted p-3 rounded-lg">
                 <div className="flex space-x-1">
                   <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce"></div>
