@@ -6,7 +6,7 @@ import Chat from "@/lib/models/Chat";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -18,8 +18,9 @@ export async function GET(
 
     await connectToDatabase();
 
+    const { id } = await params;
     const chat = await Chat.findOne({
-      _id: params.id,
+      _id: id,
       // @ts-expect-error - User type is not defined in the session
       userId: session.user.id,
     }).lean();
@@ -37,7 +38,7 @@ export async function GET(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -49,8 +50,9 @@ export async function DELETE(
 
     await connectToDatabase();
 
+    const { id } = await params;
     await Chat.deleteOne({
-      _id: params.id,
+      _id: id,
       // @ts-expect-error - User type is not defined in the session
       userId: session.user.id,
     });
