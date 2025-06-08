@@ -1,6 +1,6 @@
-import { openai } from "@ai-sdk/openai"
-import { google } from "@ai-sdk/google"
-import { xai } from "@ai-sdk/xai"
+import { openai } from "@ai-sdk/openai";
+import { google } from "@ai-sdk/google";
+import { xai } from "@ai-sdk/xai";
 
 export const providers = {
   openai: {
@@ -14,9 +14,8 @@ export const providers = {
   google: {
     name: "Google",
     models: {
-      "gemini-1.5-pro": "Gemini 1.5 Pro",
-      "gemini-1.5-flash": "Gemini 1.5 Flash",
-      "gemini-2.0-flash-exp": "Gemini 2.0 Flash (Experimental)",
+      "gemini-2.5-pro-preview-06-05": "Gemini 2.5 Pro Preview",
+      "gemini-2.5-flash-preview-05-20": "Gemini 2.5 Pro Preview 05-06",
     },
     getModel: (model: string) => google(model),
   },
@@ -25,11 +24,11 @@ export const providers = {
     models: {
       "grok-3": "Grok 3",
       "grok-3-mini": "Grok 3 Mini",
-      "grok-beta": "Grok Beta",
     },
     getModel: (model: string) => xai(model),
   },
-} as const
+} as const;
 
-export type ProviderKey = keyof typeof providers
-export type ModelKey<T extends ProviderKey> = keyof (typeof providers)[T]["models"]
+export type ProviderKey = keyof typeof providers;
+export type ModelKey<T extends ProviderKey> =
+  keyof (typeof providers)[T]["models"];
