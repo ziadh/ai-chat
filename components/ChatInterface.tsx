@@ -218,7 +218,7 @@ export function ChatInterface({ chatId, onChatCreated, onChatUpdated }: ChatInte
     return (
       <div className="flex items-center justify-center h-full">
         <Card className="p-8 text-center">
-          <h2 className="text-xl font-semibold mb-2">Welcome to LLM Chat</h2>
+          <h2 className="text-xl font-semibold mb-2">Welcome to Atlas AI</h2>
           <p className="text-muted-foreground mb-4">Please sign in to start chatting</p>
           <Button onClick={() => router.push("/auth/signin")}>
             Sign In

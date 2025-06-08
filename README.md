@@ -1,4 +1,25 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Atlas AI
+
+Atlas AI is an advanced multi-provider AI chat application built with Next.js, featuring intelligent conversation management and seamless integration with multiple AI providers.
+
+## Features
+
+- 🤖 Multi-provider AI support (OpenAI, Google AI, xAI)
+- 💬 Intelligent conversation management
+- 🔐 Secure authentication with NextAuth.js
+- 🌙 Dark/Light mode support
+- 📱 Responsive design
+- 💾 Chat history and persistence
+- ⚡ Real-time streaming responses
+
+## Tech Stack
+
+- **Framework**: Next.js 15 with App Router
+- **Authentication**: NextAuth.js with MongoDB
+- **Database**: MongoDB with Mongoose
+- **Styling**: Tailwind CSS with shadcn/ui components
+- **AI Integration**: Vercel AI SDK
+- **TypeScript**: Full type safety throughout
 
 ## Getting Started
 
@@ -34,4 +55,3 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-# ai-chat

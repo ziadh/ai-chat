@@ -33,8 +33,13 @@ export function ChatHeader() {
 
   return (
     <header className="border-b border-border bg-background px-4 py-2 flex items-center justify-between">
-      <div className="flex items-center">
-        <h1 className="text-lg font-semibold">LLM Chat</h1>
+      <div className="flex items-center gap-3">
+        <img 
+          src="/icon.png" 
+          alt="Atlas AI" 
+          className="w-8 h-8 rounded-lg"
+        />
+        <h1 className="text-lg font-semibold">Atlas AI</h1>
       </div>
       
       <div className="flex items-center gap-2">

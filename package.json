@@ -1,7 +1,8 @@
 {
-  "name": "ai-chat-app",
+  "name": "atlas-ai",
   "version": "0.1.0",
   "private": true,
+  "description": "Atlas AI - Advanced multi-provider AI chat application",
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
