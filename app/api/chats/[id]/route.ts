@@ -63,3 +63,46 @@ export async function DELETE(
     return new Response("Internal Server Error", { status: 500 });
   }
 }
+
+export async function PUT(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const session = await getServerSession(authOptions);
+
+    // @ts-expect-error - User type is not defined in the session
+    if (!session?.user?.id) {
+      return new Response("Unauthorized", { status: 401 });
+    }
+
+    const { title, messages } = await req.json();
+
+    await connectToDatabase();
+
+    const { id } = await params;
+    const updateData: Partial<{ title: string; messages: unknown[] }> = {};
+    
+    if (title !== undefined) updateData.title = title;
+    if (messages !== undefined) updateData.messages = messages;
+
+    const chat = await Chat.findOneAndUpdate(
+      {
+        _id: id,
+        // @ts-expect-error - User type is not defined in the session
+        userId: session.user.id,
+      },
+      updateData,
+      { new: true }
+    );
+
+    if (!chat) {
+      return new Response("Chat not found", { status: 404 });
+    }
+
+    return Response.json(chat);
+  } catch (error) {
+    console.error("Update chat error:", error);
+    return new Response("Internal Server Error", { status: 500 });
+  }
+}

@@ -46,6 +46,7 @@ export async function POST(req: NextRequest) {
       userId: session.user.id,
       provider,
       modelName,
+      messages: [], // Initialize empty messages array
     });
 
     return Response.json(chat);

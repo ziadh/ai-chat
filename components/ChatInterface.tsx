@@ -13,12 +13,22 @@ import { Card } from "./ui/card";
 import { ScrollArea } from "./ui/scroll-area";
 import { Input } from "./ui/input";
 
-interface ChatInterfaceProps {
-  chatId?: string;
-  onChatCreated: (chatId: string) => void;
+interface Chat {
+  _id: string;
+  title: string;
+  provider: string;
+  modelName: string;
+  createdAt: string;
+  messages: unknown[];
 }
 
-export function ChatInterface({ chatId, onChatCreated }: ChatInterfaceProps) {
+interface ChatInterfaceProps {
+  chatId?: string;
+  onChatCreated: (chatId: string, chatData?: Chat) => void;
+  onChatUpdated?: (chatId: string, updates: Partial<Chat>) => void;
+}
+
+export function ChatInterface({ chatId, onChatCreated, onChatUpdated }: ChatInterfaceProps) {
   const { status } = useSession();
   const router = useRouter();
   const [provider, setProvider] = useState<ProviderKey>("openai");
@@ -26,6 +36,7 @@ export function ChatInterface({ chatId, onChatCreated }: ChatInterfaceProps) {
   const [currentChatId, setCurrentChatId] = useState<string | undefined>(
     chatId
   );
+  const [hasUpdatedTitle, setHasUpdatedTitle] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const {
@@ -35,6 +46,7 @@ export function ChatInterface({ chatId, onChatCreated }: ChatInterfaceProps) {
     handleSubmit,
     isLoading,
     setMessages,
+    append,
   } = useChat({
     api: "/api/chat",
     body: {
@@ -43,30 +55,105 @@ export function ChatInterface({ chatId, onChatCreated }: ChatInterfaceProps) {
       model,
     },
     onFinish: async () => {
-      if (!currentChatId && messages.length === 0) {
-        // Create new chat after first message
-        const title = input.slice(0, 50) + (input.length > 50 ? "..." : "");
-        try {
-          const response = await fetch("/api/chats", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ title, provider, modelName: model }),
-          });
-          if (response.ok) {
-            const newChat = await response.json();
-            setCurrentChatId(newChat._id);
-            onChatCreated(newChat._id);
-          }
-        } catch (error) {
-          console.error("Failed to create chat:", error);
-        }
+      // Update chat title after first AI response if not already updated
+      if (currentChatId && !hasUpdatedTitle && messages.length >= 1) {
+        await updateChatTitle(currentChatId, messages[0]?.content || input);
+        setHasUpdatedTitle(true);
       }
     },
   });
 
+  // Function to generate a better title based on the first message
+  const generateTitle = (firstMessage: string): string => {
+    // Remove extra whitespace and truncate
+    const cleaned = firstMessage.trim();
+    
+    // If it's a question, use as is (up to 50 chars)
+    if (cleaned.includes('?')) {
+      return cleaned.length > 50 ? cleaned.substring(0, 47) + '...' : cleaned;
+    }
+    
+    // If it's a command/request, make it more descriptive
+    const lowerCased = cleaned.toLowerCase();
+    if (lowerCased.startsWith('write') || lowerCased.startsWith('create') || lowerCased.startsWith('generate')) {
+      return cleaned.length > 50 ? cleaned.substring(0, 47) + '...' : cleaned;
+    }
+    
+    // For other types, try to extract the main topic
+    const words = cleaned.split(' ');
+    if (words.length > 8) {
+      return words.slice(0, 8).join(' ') + '...';
+    }
+    
+    return cleaned.length > 50 ? cleaned.substring(0, 47) + '...' : cleaned;
+  };
+
+  // Function to update chat title
+  const updateChatTitle = async (chatId: string, firstMessage: string) => {
+    try {
+      const newTitle = generateTitle(firstMessage);
+      const response = await fetch(`/api/chats/${chatId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: newTitle }),
+      });
+      
+      if (response.ok && onChatUpdated) {
+        onChatUpdated(chatId, { title: newTitle });
+      }
+    } catch (error) {
+      console.error('Failed to update chat title:', error);
+    }
+  };
+
+  const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    
+    if (!input.trim()) return;
+    
+    // If no current chat ID, create chat first
+    if (!currentChatId) {
+      const title = input.slice(0, 50) + (input.length > 50 ? "..." : "");
+      
+      try {
+        const response = await fetch("/api/chats", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ 
+            title, 
+            provider, 
+            modelName: model 
+          }),
+        });
+        if (response.ok) {
+          const newChat = await response.json();
+          setCurrentChatId(newChat._id);
+          onChatCreated(newChat._id, newChat);
+          
+          // Now send the message to the chat API with the new chat ID
+          append({ role: "user", content: input }, {
+            body: {
+              chatId: newChat._id,
+              provider,
+              model,
+            }
+          });
+          return;
+        }
+      } catch (error) {
+        console.error("Failed to create chat:", error);
+        return;
+      }
+    }
+    
+    // For existing chats, use normal submit
+    handleSubmit(e);
+  };
+
   useEffect(() => {
     if (chatId !== currentChatId) {
       setCurrentChatId(chatId);
+      setHasUpdatedTitle(false);
       if (chatId) {
         loadChatMessages(chatId);
       } else {
@@ -94,6 +181,7 @@ export function ChatInterface({ chatId, onChatCreated }: ChatInterfaceProps) {
         setMessages(formattedMessages);
         setProvider(chat.provider);
         setModel(chat.modelName);
+        setHasUpdatedTitle(chat.messages.length > 0);
       }
     } catch (error) {
       console.error("Failed to load chat:", error);
@@ -199,7 +287,7 @@ export function ChatInterface({ chatId, onChatCreated }: ChatInterfaceProps) {
       </ScrollArea>
 
       <div className="border-t border-gray-200 p-4">
-        <form onSubmit={handleSubmit} className="flex gap-2">
+        <form onSubmit={handleFormSubmit} className="flex gap-2">
           <Input
             value={input}
             onChange={handleInputChange}
