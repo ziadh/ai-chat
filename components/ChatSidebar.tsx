@@ -180,7 +180,7 @@ export const ChatSidebar = forwardRef<ChatSidebarRef, ChatSidebarProps>(
               <div className="flex items-center flex-1 min-w-0">
                 <MessageSquare className="w-4 h-4 mr-2 text-muted-foreground flex-shrink-0" />
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium truncate">
+                  <div className="text-sm font-medium break-words">
                     {generatingTitles.has(chat._id) ? (
                       <TypingTitle 
                         text={chat.title} 
@@ -190,9 +190,6 @@ export const ChatSidebar = forwardRef<ChatSidebarRef, ChatSidebarProps>(
                     ) : (
                       chat.title
                     )}
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    {chat.provider} • {chat.modelName}
                   </div>
                 </div>
               </div>
