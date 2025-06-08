@@ -110,13 +110,6 @@ export const ChatSidebar = forwardRef<ChatSidebarRef, ChatSidebarProps>(
 
     return (
       <div className="w-64 bg-gray-50 border-r border-gray-200 flex flex-col">
-        <div className="p-4 border-b border-gray-200">
-          <Button onClick={onNewChat} className="w-full">
-            <Plus className="w-4 h-4 mr-2" />
-            New Chat
-          </Button>
-        </div>
-
         <ScrollArea className="flex-1">
           <div className="p-2">
             {loading ? (
@@ -160,6 +153,13 @@ export const ChatSidebar = forwardRef<ChatSidebarRef, ChatSidebarProps>(
             )}
           </div>
         </ScrollArea>
+
+        <div className="p-4 border-t border-gray-200">
+          <Button onClick={onNewChat} className="w-full">
+            <Plus className="w-4 h-4 mr-2" />
+            New Chat
+          </Button>
+        </div>
       </div>
     );
   }

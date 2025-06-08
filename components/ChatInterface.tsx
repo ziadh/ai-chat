@@ -217,15 +217,6 @@ export function ChatInterface({ chatId, onChatCreated, onChatUpdated }: ChatInte
 
   return (
     <div className="flex flex-col h-full">
-      <div className="border-b border-gray-200 p-4">
-        <ProviderSelector
-          provider={provider}
-          model={model}
-          onProviderChange={setProvider}
-          onModelChange={setModel}
-        />
-      </div>
-
       <ScrollArea className="flex-1 p-4" ref={scrollRef}>
         <div className="space-y-4">
           {messages.length === 0 ? (
@@ -286,7 +277,13 @@ export function ChatInterface({ chatId, onChatCreated, onChatUpdated }: ChatInte
         </div>
       </ScrollArea>
 
-      <div className="border-t border-gray-200 p-4">
+      <div className="border-t border-gray-200 p-4 space-y-3">
+        <ProviderSelector
+          provider={provider}
+          model={model}
+          onProviderChange={setProvider}
+          onModelChange={setModel}
+        />
         <form onSubmit={handleFormSubmit} className="flex gap-2">
           <Input
             value={input}
