@@ -45,6 +45,13 @@ function AppContent() {
     }
   };
 
+  const handleTitleGenerating = (chatId: string, isGenerating: boolean) => {
+    // Trigger typing animation in sidebar
+    if (sidebarRef.current) {
+      sidebarRef.current.setTitleGenerating(chatId, isGenerating);
+    }
+  };
+
   // Show a minimal loading state during session check to prevent flash
   if (status === "loading") {
     return (
@@ -104,6 +111,7 @@ function AppContent() {
             chatId={currentChatId}
             onChatCreated={handleChatCreated}
             onChatUpdated={handleChatUpdated}
+            onTitleGenerating={handleTitleGenerating}
           />
         </div>
       </div>

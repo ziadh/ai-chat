@@ -64,22 +64,6 @@ export const authOptions: NextAuthOptions = {
     signIn: "/auth/signin",
     error: "/auth/signin", // Redirect errors to signin page
   },
-  debug: process.env.NODE_ENV === "development",
-  events: {
-    signIn: async (message) => {
-      console.log("Sign in event:", message);
-    },
-    signOut: async (message) => {
-      console.log("Sign out event:", message);
-    },
-    createUser: async (message) => {
-      console.log("Create user event:", message);
-    },
-    linkAccount: async (message) => {
-      console.log("Link account event:", message);
-    },
-    session: async (message) => {
-      console.log("Session event:", message);
-    },
-  },
+  debug: false, // Disable debug logging
+  // Removed events logging to clean up console output
 };

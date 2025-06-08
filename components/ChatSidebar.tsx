@@ -8,6 +8,7 @@ import { Plus, MessageSquare, Trash2 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { Button } from "./ui/button";
 import { ScrollArea } from "./ui/scroll-area";
+import { TypingTitle } from "./TypingTitle";
 
 interface Chat {
   _id: string;
@@ -28,6 +29,7 @@ export interface ChatSidebarRef {
   addNewChat: (chat: Chat) => void;
   updateChat: (chatId: string, updates: Partial<Chat>) => void;
   refreshChats: () => void;
+  setTitleGenerating: (chatId: string, isGenerating: boolean) => void;
 }
 
 // Skeleton loader component for better loading states
@@ -49,6 +51,7 @@ export const ChatSidebar = forwardRef<ChatSidebarRef, ChatSidebarProps>(
     const [chats, setChats] = useState<Chat[]>([]);
     const [loading, setLoading] = useState(true);
     const [mounted, setMounted] = useState(false);
+    const [generatingTitles, setGeneratingTitles] = useState<Set<string>>(new Set());
 
     // Track mounted state to prevent hydration issues
     useEffect(() => {
@@ -99,6 +102,7 @@ export const ChatSidebar = forwardRef<ChatSidebarRef, ChatSidebarProps>(
     };
 
     const updateChat = (chatId: string, updates: Partial<Chat>) => {
+      console.log('📋 ChatSidebar: Updating chat', chatId, 'with:', updates);
       setChats(prevChats => 
         prevChats.map(chat => 
           chat._id === chatId ? { ...chat, ...updates } : chat
@@ -106,10 +110,24 @@ export const ChatSidebar = forwardRef<ChatSidebarRef, ChatSidebarProps>(
       );
     };
 
+    const setTitleGenerating = (chatId: string, isGenerating: boolean) => {
+      console.log('⚡ ChatSidebar: Setting title generating for', chatId, ':', isGenerating);
+      setGeneratingTitles(prev => {
+        const newSet = new Set(prev);
+        if (isGenerating) {
+          newSet.add(chatId);
+        } else {
+          newSet.delete(chatId);
+        }
+        return newSet;
+      });
+    };
+
     useImperativeHandle(ref, () => ({
       addNewChat,
       updateChat,
       refreshChats: fetchChats,
+      setTitleGenerating,
     }));
 
     // Stable sidebar structure that doesn't change layout
@@ -163,7 +181,15 @@ export const ChatSidebar = forwardRef<ChatSidebarRef, ChatSidebarProps>(
                 <MessageSquare className="w-4 h-4 mr-2 text-muted-foreground flex-shrink-0" />
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-medium truncate">
-                    {chat.title}
+                    {generatingTitles.has(chat._id) ? (
+                      <TypingTitle 
+                        text={chat.title} 
+                        speed={30}
+                        onComplete={() => setTitleGenerating(chat._id, false)}
+                      />
+                    ) : (
+                      chat.title
+                    )}
                   </div>
                   <div className="text-xs text-muted-foreground">
                     {chat.provider} • {chat.modelName}
