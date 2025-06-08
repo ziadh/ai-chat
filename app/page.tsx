@@ -4,6 +4,8 @@ import { useState, useRef } from "react";
 import { SessionProvider } from "next-auth/react";
 import { ChatInterface } from "@/components/ChatInterface";
 import { ChatSidebar, type ChatSidebarRef } from "@/components/ChatSidebar";
+import { ChatHeader } from "@/components/ChatHeader";
+import { ThemeProvider } from "@/lib/theme-context";
 
 interface Chat {
   _id: string;
@@ -44,21 +46,26 @@ export default function Home() {
 
   return (
     <SessionProvider>
-      <div className="flex h-screen">
-        <ChatSidebar
-          ref={sidebarRef}
-          currentChatId={currentChatId}
-          onChatSelect={handleChatSelect}
-          onNewChat={handleNewChat}
-        />
-        <div className="flex-1">
-          <ChatInterface
-            chatId={currentChatId}
-            onChatCreated={handleChatCreated}
-            onChatUpdated={handleChatUpdated}
-          />
+      <ThemeProvider>
+        <div className="flex h-screen flex-col">
+          <ChatHeader />
+          <div className="flex flex-1">
+            <ChatSidebar
+              ref={sidebarRef}
+              currentChatId={currentChatId}
+              onChatSelect={handleChatSelect}
+              onNewChat={handleNewChat}
+            />
+            <div className="flex-1">
+              <ChatInterface
+                chatId={currentChatId}
+                onChatCreated={handleChatCreated}
+                onChatUpdated={handleChatUpdated}
+              />
+            </div>
+          </div>
         </div>
-      </div>
+      </ThemeProvider>
     </SessionProvider>
   );
 }

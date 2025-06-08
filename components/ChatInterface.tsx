@@ -194,7 +194,7 @@ export function ChatInterface({ chatId, onChatCreated, onChatUpdated }: ChatInte
         <Card className="p-8 text-center">
           <div className="flex flex-col items-center space-y-4">
             <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-            <p className="text-gray-600">Loading...</p>
+            <p className="text-muted-foreground">Loading...</p>
           </div>
         </Card>
       </div>
@@ -206,7 +206,7 @@ export function ChatInterface({ chatId, onChatCreated, onChatUpdated }: ChatInte
       <div className="flex items-center justify-center h-full">
         <Card className="p-8 text-center">
           <h2 className="text-xl font-semibold mb-2">Welcome to LLM Chat</h2>
-          <p className="text-gray-600 mb-4">Please sign in to start chatting</p>
+          <p className="text-muted-foreground mb-4">Please sign in to start chatting</p>
           <Button onClick={() => router.push("/auth/signin")}>
             Sign In
           </Button>
@@ -220,8 +220,8 @@ export function ChatInterface({ chatId, onChatCreated, onChatUpdated }: ChatInte
       <ScrollArea className="flex-1 p-4" ref={scrollRef}>
         <div className="space-y-4">
           {messages.length === 0 ? (
-            <div className="text-center text-gray-500 py-8">
-              <Bot className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+            <div className="text-center text-muted-foreground py-8">
+              <Bot className="w-12 h-12 mx-auto mb-4 text-muted-foreground/50" />
               <p>Start a conversation with your AI assistant</p>
             </div>
           ) : (
@@ -233,22 +233,22 @@ export function ChatInterface({ chatId, onChatCreated, onChatUpdated }: ChatInte
                 }`}
               >
                 {message.role === "assistant" && (
-                  <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center">
-                    <Bot className="w-4 h-4 text-white" />
+                  <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
+                    <Bot className="w-4 h-4 text-primary-foreground" />
                   </div>
                 )}
                 <div
                   className={`max-w-[70%] p-3 rounded-lg ${
                     message.role === "user"
-                      ? "bg-blue-500 text-white"
-                      : "bg-gray-100 text-gray-900"
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted text-foreground"
                   }`}
                 >
                   <div className="whitespace-pre-wrap">{message.content}</div>
                 </div>
                 {message.role === "user" && (
-                  <div className="w-8 h-8 rounded-full bg-gray-500 flex items-center justify-center">
-                    <User className="w-4 h-4 text-white" />
+                  <div className="w-8 h-8 rounded-full bg-muted-foreground flex items-center justify-center">
+                    <User className="w-4 h-4 text-muted" />
                   </div>
                 )}
               </div>
@@ -256,18 +256,18 @@ export function ChatInterface({ chatId, onChatCreated, onChatUpdated }: ChatInte
           )}
           {isLoading && (
             <div className="flex items-start gap-3">
-              <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center">
-                <Bot className="w-4 h-4 text-white" />
+              <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
+                <Bot className="w-4 h-4 text-primary-foreground" />
               </div>
-              <div className="bg-gray-100 p-3 rounded-lg">
+              <div className="bg-muted p-3 rounded-lg">
                 <div className="flex space-x-1">
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                  <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce"></div>
                   <div
-                    className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                    className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce"
                     style={{ animationDelay: "0.1s" }}
                   ></div>
                   <div
-                    className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                    className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce"
                     style={{ animationDelay: "0.2s" }}
                   ></div>
                 </div>
@@ -277,7 +277,7 @@ export function ChatInterface({ chatId, onChatCreated, onChatUpdated }: ChatInte
         </div>
       </ScrollArea>
 
-      <div className="border-t border-gray-200 p-4 space-y-3">
+      <div className="border-t border-border p-4 space-y-3">
         <ProviderSelector
           provider={provider}
           model={model}

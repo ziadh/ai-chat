@@ -93,12 +93,12 @@ export const ChatSidebar = forwardRef<ChatSidebarRef, ChatSidebarProps>(
 
     if (status === "loading") {
       return (
-        <div className="w-64 bg-gray-50 border-r border-gray-200 flex flex-col">
-          <div className="p-4 border-b border-gray-200">
-            <div className="w-full h-10 bg-gray-200 rounded animate-pulse"></div>
+        <div className="w-64 bg-sidebar border-r border-sidebar-border flex flex-col">
+          <div className="p-4 border-b border-sidebar-border">
+            <div className="w-full h-10 bg-muted rounded animate-pulse"></div>
           </div>
           <div className="flex-1 p-2">
-            <div className="text-center text-gray-500 py-4">Loading...</div>
+            <div className="text-center text-muted-foreground py-4">Loading...</div>
           </div>
         </div>
       );
@@ -109,31 +109,31 @@ export const ChatSidebar = forwardRef<ChatSidebarRef, ChatSidebarProps>(
     }
 
     return (
-      <div className="w-64 bg-gray-50 border-r border-gray-200 flex flex-col">
+      <div className="w-64 bg-sidebar border-r border-sidebar-border flex flex-col">
         <ScrollArea className="flex-1">
           <div className="p-2">
             {loading ? (
-              <div className="text-center text-gray-500 py-4">Loading...</div>
+              <div className="text-center text-muted-foreground py-4">Loading...</div>
             ) : chats.length === 0 ? (
-              <div className="text-center text-gray-500 py-4">No chats yet</div>
+              <div className="text-center text-muted-foreground py-4">No chats yet</div>
             ) : (
               chats.map((chat) => (
                 <div
                   key={chat._id}
                   className={cn(
-                    "group flex items-center justify-between p-3 rounded-lg cursor-pointer hover:bg-gray-100 mb-1",
+                    "group flex items-center justify-between p-3 rounded-lg cursor-pointer hover:bg-sidebar-accent mb-1",
                     currentChatId === chat._id &&
-                      "bg-blue-50 border border-blue-200"
+                      "bg-sidebar-accent border border-sidebar-border"
                   )}
                   onClick={() => onChatSelect(chat._id)}
                 >
                   <div className="flex items-center flex-1 min-w-0">
-                    <MessageSquare className="w-4 h-4 mr-2 text-gray-400" />
+                    <MessageSquare className="w-4 h-4 mr-2 text-muted-foreground" />
                     <div className="flex-1 min-w-0">
                       <div className="text-sm font-medium truncate">
                         {chat.title}
                       </div>
-                      <div className="text-xs text-gray-500">
+                                              <div className="text-xs text-muted-foreground">
                         {chat.provider} • {chat.modelName}
                       </div>
                     </div>
@@ -154,7 +154,7 @@ export const ChatSidebar = forwardRef<ChatSidebarRef, ChatSidebarProps>(
           </div>
         </ScrollArea>
 
-        <div className="p-4 border-t border-gray-200">
+        <div className="p-4 border-t border-sidebar-border">
           <Button onClick={onNewChat} className="w-full">
             <Plus className="w-4 h-4 mr-2" />
             New Chat
