@@ -4,7 +4,14 @@ import type React from "react";
 
 import { useState, useEffect, useImperativeHandle, forwardRef } from "react";
 import { useSession } from "next-auth/react";
-import { Plus, MessageSquare, Trash2, X, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  Plus,
+  MessageSquare,
+  Trash2,
+  X,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import { cn } from "../lib/utils";
 import { Button } from "./ui/button";
 import { ScrollArea } from "./ui/scroll-area";
@@ -114,7 +121,7 @@ export const ChatSidebar = forwardRef<ChatSidebarRef, ChatSidebarProps>(
     };
 
     const toggleSidebar = () => {
-      setIsCollapsed(prev => !prev);
+      setIsCollapsed((prev) => !prev);
     };
 
     const addNewChat = (newChat: Chat) => {
@@ -202,7 +209,7 @@ export const ChatSidebar = forwardRef<ChatSidebarRef, ChatSidebarProps>(
               <div className="flex items-center flex-1 min-w-0">
                 <MessageSquare className="w-4 h-4 mr-2 text-muted-foreground flex-shrink-0" />
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium break-words">
+                  <div className="text-sm font-medium">
                     {generatingTitles.has(chat._id) ? (
                       <TypingTitle
                         text={chat.title}
@@ -233,10 +240,12 @@ export const ChatSidebar = forwardRef<ChatSidebarRef, ChatSidebarProps>(
 
     return (
       <>
-        <div className={cn(
-          "bg-sidebar border-r border-sidebar-border flex flex-col min-h-0 transition-all duration-300 overflow-hidden",
-          isCollapsed ? "w-0" : "w-64"
-        )}>
+        <div
+          className={cn(
+            "bg-sidebar border-r border-sidebar-border flex flex-col min-h-0 transition-all duration-300 overflow-hidden",
+            isCollapsed ? "w-0" : "w-64"
+          )}
+        >
           {/* Header with toggle and new chat */}
           <div className="p-4 border-b border-sidebar-border flex-shrink-0">
             <div className="flex items-center gap-2">
@@ -260,14 +269,14 @@ export const ChatSidebar = forwardRef<ChatSidebarRef, ChatSidebarProps>(
               </Button>
             </div>
           </div>
-          
+
           {/* Chat list */}
           <ScrollArea className="flex-1">{renderSidebarContent()}</ScrollArea>
         </div>
 
         {/* Collapsed state - floating expand button */}
         {isCollapsed && (
-          <div className="fixed left-0 top-[70] z-40">
+          <div className="fixed left-0 top-[70px] z-40">
             <Button
               size="icon"
               variant="ghost"
@@ -284,11 +293,11 @@ export const ChatSidebar = forwardRef<ChatSidebarRef, ChatSidebarProps>(
         {chatToDelete && (
           <div className="fixed inset-0 z-50 flex items-center justify-center">
             {/* Backdrop */}
-            <div 
+            <div
               className="fixed inset-0 bg-black/50 backdrop-blur-sm"
               onClick={cancelDelete}
             />
-            
+
             {/* Modal Content */}
             <div className="relative bg-background border rounded-lg shadow-lg p-6 w-full max-w-md mx-4">
               {/* Close button */}
@@ -300,24 +309,22 @@ export const ChatSidebar = forwardRef<ChatSidebarRef, ChatSidebarProps>(
               >
                 <X className="h-4 w-4" />
               </Button>
-              
+
               {/* Header */}
               <div className="mb-4">
                 <h2 className="text-lg font-semibold">Delete Chat</h2>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Are you sure you want to delete this chat? This action cannot be undone.
+                  Are you sure you want to delete this chat? This action cannot
+                  be undone.
                 </p>
               </div>
-              
+
               {/* Footer */}
               <div className="flex justify-end gap-2">
                 <Button variant="outline" onClick={cancelDelete}>
                   Cancel
                 </Button>
-                <Button 
-                  variant="destructive" 
-                  onClick={confirmDeleteChat}
-                >
+                <Button variant="destructive" onClick={confirmDeleteChat}>
                   Delete
                 </Button>
               </div>
