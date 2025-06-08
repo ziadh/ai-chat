@@ -67,7 +67,16 @@ export function ChatInterface({ chatId, onChatCreated, onChatUpdated }: ChatInte
       provider,
       model,
     },
-    onFinish: async () => {
+    onFinish: async (message) => {
+      // Add provider info to the assistant message
+      if (message.role === 'assistant') {
+        setMessages(prev => prev.map(msg => 
+          msg.id === message.id 
+            ? { ...msg, provider: provider as any }
+            : msg
+        ));
+      }
+      
       // Update chat title after first AI response if not already updated
       if (currentChatId && !hasUpdatedTitle && messages.length >= 1) {
         await updateChatTitle(currentChatId, messages[0]?.content || input);
@@ -190,6 +199,8 @@ export function ChatInterface({ chatId, onChatCreated, onChatUpdated }: ChatInte
           id: msg._id || `msg-${index}`,
           role: msg.role,
           content: msg.content,
+          // Store the provider used for this message (for assistant messages)
+          provider: msg.role === 'assistant' ? (msg.provider || chat.provider) : undefined,
         }));
         setMessages(formattedMessages);
         setProvider(chat.provider);
@@ -248,7 +259,7 @@ export function ChatInterface({ chatId, onChatCreated, onChatUpdated }: ChatInte
                 }`}
               >
                 {message.role === "assistant" && (
-                  <ProviderLogo provider={provider} className="w-8 h-8" />
+                  <ProviderLogo provider={(message as any).provider || provider} className="w-8 h-8" />
                 )}
                 <div
                   className={`max-w-[70%] p-3 rounded-lg ${
