@@ -35,7 +35,7 @@ export function ChatInterface({ chatId, onChatCreated, onChatUpdated, onTitleGen
   const { data: session, status } = useSession();
   const router = useRouter();
   const [provider, setProvider] = useState<ProviderKey>("openai");
-  const [model, setModel] = useState("gpt-4o");
+  const [model, setModel] = useState("gpt-4o-mini");
   const [currentChatId, setCurrentChatId] = useState<string | undefined>(
     chatId
   );
@@ -70,9 +70,6 @@ export function ChatInterface({ chatId, onChatCreated, onChatUpdated, onTitleGen
       model,
     },
     onFinish: async (message) => {
-      console.log('🏁 onFinish callback triggered with message:', message);
-      console.log('📊 Current state - chatId:', currentChatId, 'chatIdRef:', chatIdRef.current, 'hasUpdatedTitle:', hasUpdatedTitle);
-      
       // Add provider info to the assistant message
       if (message.role === 'assistant') {
         setMessages(prev => prev.map(msg => 
@@ -86,14 +83,10 @@ export function ChatInterface({ chatId, onChatCreated, onChatUpdated, onTitleGen
       // Use chatIdRef.current to get the most up-to-date chat ID
       const activeChatId = chatIdRef.current;
       if (activeChatId && !hasUpdatedTitle) {
-        console.log('🎯 Triggering title generation for chat:', activeChatId);
         // The messages array now includes both user and assistant messages
         const allMessages = [...messages, message];
-        console.log('📝 Messages for title generation:', allMessages);
         await updateChatTitle(activeChatId, allMessages);
         setHasUpdatedTitle(true);
-      } else {
-        console.log('❌ Title generation skipped - activeChatId:', activeChatId, 'hasUpdatedTitle:', hasUpdatedTitle);
       }
     },
   });
@@ -101,10 +94,6 @@ export function ChatInterface({ chatId, onChatCreated, onChatUpdated, onTitleGen
   // Function to generate an AI-powered title using GPT-4o mini
   const generateAITitle = async (chatId: string, messages: any[]): Promise<string> => {
     try {
-      console.log('🤖 Generating AI title for chat:', chatId);
-      console.log('📨 Sending messages to AI:', messages);
-      // Don't trigger typing animation here - we'll do it after updating the title
-      
       const response = await fetch('/api/generate-title', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -113,10 +102,8 @@ export function ChatInterface({ chatId, onChatCreated, onChatUpdated, onTitleGen
       
       if (response.ok) {
         const { title } = await response.json();
-        console.log('✅ AI generated title:', title);
         return title;
       } else {
-        console.log('❌ AI title generation failed, using fallback');
         // Fallback to first message if API fails
         const firstUserMessage = messages.find((msg: any) => msg.role === 'user')?.content || '';
         return firstUserMessage.length > 50 
@@ -140,7 +127,6 @@ export function ChatInterface({ chatId, onChatCreated, onChatUpdated, onTitleGen
       onTitleGenerating?.(chatId, false);
       
       const newTitle = await generateAITitle(chatId, messages);
-      console.log('💾 Updating chat title in database:', newTitle);
       const response = await fetch(`/api/chats/${chatId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -148,13 +134,10 @@ export function ChatInterface({ chatId, onChatCreated, onChatUpdated, onTitleGen
       });
       
       if (response.ok && onChatUpdated) {
-        console.log('🔄 Starting typing animation and updating title');
         // Start typing animation first, then update the title data
         onTitleGenerating?.(chatId, true);
         // Update the title data immediately after (the typing animation will handle the display)
         onChatUpdated(chatId, { title: newTitle });
-      } else {
-        console.log('❌ Failed to update title in database');
       }
     } catch (error) {
       console.error('Failed to update chat title:', error);
@@ -182,14 +165,11 @@ export function ChatInterface({ chatId, onChatCreated, onChatUpdated, onTitleGen
         });
         if (response.ok) {
           const newChat = await response.json();
-          console.log('💬 New chat created:', newChat);
           setCurrentChatId(newChat._id);
           chatIdRef.current = newChat._id; // Update ref immediately
-          console.log('🆔 Set current chat ID to:', newChat._id);
           onChatCreated(newChat._id, newChat);
           
           // Now send the message to the chat API with the new chat ID
-          console.log('📤 Sending first message to chat API');
           append({ role: "user", content: input }, {
             body: {
               chatId: newChat._id,
@@ -211,11 +191,9 @@ export function ChatInterface({ chatId, onChatCreated, onChatUpdated, onTitleGen
 
   useEffect(() => {
     if (chatId !== currentChatId) {
-      console.log('🔄 Chat ID changed from', currentChatId, 'to', chatId);
       setCurrentChatId(chatId);
       chatIdRef.current = chatId; // Update ref when chat ID changes
       setHasUpdatedTitle(false);
-      console.log('🔄 Reset hasUpdatedTitle to false');
       if (chatId) {
         loadChatMessages(chatId);
       } else {

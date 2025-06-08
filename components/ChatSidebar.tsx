@@ -4,7 +4,7 @@ import type React from "react";
 
 import { useState, useEffect, useImperativeHandle, forwardRef } from "react";
 import { useSession } from "next-auth/react";
-import { Plus, MessageSquare, Trash2 } from "lucide-react";
+import { Plus, MessageSquare, Trash2, X } from "lucide-react";
 import { cn } from "../lib/utils";
 import { Button } from "./ui/button";
 import { ScrollArea } from "./ui/scroll-area";
@@ -51,7 +51,10 @@ export const ChatSidebar = forwardRef<ChatSidebarRef, ChatSidebarProps>(
     const [chats, setChats] = useState<Chat[]>([]);
     const [loading, setLoading] = useState(true);
     const [mounted, setMounted] = useState(false);
-    const [generatingTitles, setGeneratingTitles] = useState<Set<string>>(new Set());
+    const [generatingTitles, setGeneratingTitles] = useState<Set<string>>(
+      new Set()
+    );
+    const [chatToDelete, setChatToDelete] = useState<string | null>(null);
 
     // Track mounted state to prevent hydration issues
     useEffect(() => {
@@ -80,39 +83,49 @@ export const ChatSidebar = forwardRef<ChatSidebarRef, ChatSidebarProps>(
       }
     };
 
-    const deleteChat = async (chatId: string, e: React.MouseEvent) => {
+    const handleDeleteClick = (chatId: string, e: React.MouseEvent) => {
       e.stopPropagation();
+      setChatToDelete(chatId);
+    };
+
+    const confirmDeleteChat = async () => {
+      if (!chatToDelete) return;
+
       try {
-        const response = await fetch(`/api/chats/${chatId}`, {
+        const response = await fetch(`/api/chats/${chatToDelete}`, {
           method: "DELETE",
         });
         if (response.ok) {
-          setChats(chats.filter((chat) => chat._id !== chatId));
-          if (currentChatId === chatId) {
+          setChats(chats.filter((chat) => chat._id !== chatToDelete));
+          if (currentChatId === chatToDelete) {
             onNewChat();
           }
         }
       } catch (error) {
         console.error("Failed to delete chat:", error);
+      } finally {
+        setChatToDelete(null);
       }
     };
 
+    const cancelDelete = () => {
+      setChatToDelete(null);
+    };
+
     const addNewChat = (newChat: Chat) => {
-      setChats(prevChats => [newChat, ...prevChats]);
+      setChats((prevChats) => [newChat, ...prevChats]);
     };
 
     const updateChat = (chatId: string, updates: Partial<Chat>) => {
-      console.log('📋 ChatSidebar: Updating chat', chatId, 'with:', updates);
-      setChats(prevChats => 
-        prevChats.map(chat => 
+      setChats((prevChats) =>
+        prevChats.map((chat) =>
           chat._id === chatId ? { ...chat, ...updates } : chat
         )
       );
     };
 
     const setTitleGenerating = (chatId: string, isGenerating: boolean) => {
-      console.log('⚡ ChatSidebar: Setting title generating for', chatId, ':', isGenerating);
-      setGeneratingTitles(prev => {
+      setGeneratingTitles((prev) => {
         const newSet = new Set(prev);
         if (isGenerating) {
           newSet.add(chatId);
@@ -133,7 +146,11 @@ export const ChatSidebar = forwardRef<ChatSidebarRef, ChatSidebarProps>(
     // Stable sidebar structure that doesn't change layout
     const renderSidebarContent = () => {
       // Show loading skeletons during initial load
-      if (!mounted || status === "loading" || (status === "authenticated" && loading)) {
+      if (
+        !mounted ||
+        status === "loading" ||
+        (status === "authenticated" && loading)
+      ) {
         return (
           <div className="p-2">
             <ChatItemSkeleton />
@@ -182,8 +199,8 @@ export const ChatSidebar = forwardRef<ChatSidebarRef, ChatSidebarProps>(
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-medium break-words">
                     {generatingTitles.has(chat._id) ? (
-                      <TypingTitle 
-                        text={chat.title} 
+                      <TypingTitle
+                        text={chat.title}
                         speed={30}
                         onComplete={() => setTitleGenerating(chat._id, false)}
                       />
@@ -198,7 +215,7 @@ export const ChatSidebar = forwardRef<ChatSidebarRef, ChatSidebarProps>(
                 size="sm"
                 className="opacity-0 group-hover:opacity-100 h-6 w-6 p-0 transition-opacity duration-200"
                 onClick={(e: React.MouseEvent<HTMLButtonElement>) =>
-                  deleteChat(chat._id, e)
+                  handleDeleteClick(chat._id, e)
                 }
               >
                 <Trash2 className="w-3 h-3" />
@@ -210,22 +227,67 @@ export const ChatSidebar = forwardRef<ChatSidebarRef, ChatSidebarProps>(
     };
 
     return (
-      <div className="w-64 bg-sidebar border-r border-sidebar-border flex flex-col min-h-0">
-        <ScrollArea className="flex-1">
-          {renderSidebarContent()}
-        </ScrollArea>
-
-        <div className="p-4 border-t border-sidebar-border flex-shrink-0">
-          <Button 
-            onClick={onNewChat} 
-            className="w-full transition-all duration-200"
-            disabled={!mounted || status !== "authenticated"}
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            New Chat
-          </Button>
+      <>
+        <div className="w-64 bg-sidebar border-r border-sidebar-border flex flex-col min-h-0">
+          <div className="p-4 border-b border-sidebar-border flex-shrink-0">
+            <Button
+              onClick={onNewChat}
+              className="w-full transition-all duration-200"
+              disabled={!mounted || status !== "authenticated"}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              New Chat
+            </Button>
+          </div>
+          
+          <ScrollArea className="flex-1">{renderSidebarContent()}</ScrollArea>
         </div>
-      </div>
+
+        {/* Delete Confirmation Modal */}
+        {chatToDelete && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center">
+            {/* Backdrop */}
+            <div 
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm"
+              onClick={cancelDelete}
+            />
+            
+            {/* Modal Content */}
+            <div className="relative bg-background border rounded-lg shadow-lg p-6 w-full max-w-md mx-4">
+              {/* Close button */}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="absolute right-2 top-2 h-6 w-6 p-0"
+                onClick={cancelDelete}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+              
+              {/* Header */}
+              <div className="mb-4">
+                <h2 className="text-lg font-semibold">Delete Chat</h2>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Are you sure you want to delete this chat? This action cannot be undone.
+                </p>
+              </div>
+              
+              {/* Footer */}
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={cancelDelete}>
+                  Cancel
+                </Button>
+                <Button 
+                  variant="destructive" 
+                  onClick={confirmDeleteChat}
+                >
+                  Delete
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+      </>
     );
   }
 );
