@@ -4,6 +4,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useChat } from "ai/react";
 import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { Send, User, Bot } from "lucide-react";
 import type { ProviderKey } from "@/lib/providers";
 import { ProviderSelector } from "./ProviderSelector";
@@ -18,7 +19,8 @@ interface ChatInterfaceProps {
 }
 
 export function ChatInterface({ chatId, onChatCreated }: ChatInterfaceProps) {
-  const { data: session } = useSession();
+  const { status } = useSession();
+  const router = useRouter();
   const [provider, setProvider] = useState<ProviderKey>("openai");
   const [model, setModel] = useState("gpt-4o");
   const [currentChatId, setCurrentChatId] = useState<string | undefined>(
@@ -98,13 +100,26 @@ export function ChatInterface({ chatId, onChatCreated }: ChatInterfaceProps) {
     }
   };
 
-  if (!session?.user) {
+  if (status === "loading") {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <Card className="p-8 text-center">
+          <div className="flex flex-col items-center space-y-4">
+            <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+            <p className="text-gray-600">Loading...</p>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
+  if (status === "unauthenticated") {
     return (
       <div className="flex items-center justify-center h-full">
         <Card className="p-8 text-center">
           <h2 className="text-xl font-semibold mb-2">Welcome to LLM Chat</h2>
           <p className="text-gray-600 mb-4">Please sign in to start chatting</p>
-          <Button onClick={() => (window.location.href = "/auth/signin")}>
+          <Button onClick={() => router.push("/auth/signin")}>
             Sign In
           </Button>
         </Card>

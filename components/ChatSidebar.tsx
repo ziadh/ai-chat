@@ -29,7 +29,7 @@ export function ChatSidebar({
   onChatSelect,
   onNewChat,
 }: ChatSidebarProps) {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const [chats, setChats] = useState<Chat[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -70,7 +70,20 @@ export function ChatSidebar({
     }
   };
 
-  if (!session?.user) {
+  if (status === "loading") {
+    return (
+      <div className="w-64 bg-gray-50 border-r border-gray-200 flex flex-col">
+        <div className="p-4 border-b border-gray-200">
+          <div className="w-full h-10 bg-gray-200 rounded animate-pulse"></div>
+        </div>
+        <div className="flex-1 p-2">
+          <div className="text-center text-gray-500 py-4">Loading...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (status === "unauthenticated") {
     return null;
   }
 
