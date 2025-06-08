@@ -14,16 +14,17 @@ export const providers = {
   google: {
     name: "Google",
     models: {
-      "gemini-2.5-pro-preview-06-05": "Gemini 2.5 Pro Preview",
-      "gemini-2.5-flash-preview-05-20": "Gemini 2.5 Pro Preview 05-06",
+      "gemini-2.0-flash": "Gemini 2.0 Flash",
+      "gemini-1.5-flash": "Gemini 1.5 Flash",
+      "gemini-1.5-pro": "Gemini 1.5 Pro",
     },
     getModel: (model: string) => google(model),
   },
   xai: {
     name: "xAI",
     models: {
-      "grok-3": "Grok 3",
-      "grok-3-mini": "Grok 3 Mini",
+      "grok-beta": "Grok Beta",
+      "grok-2": "Grok 2",
     },
     getModel: (model: string) => xai(model),
   },

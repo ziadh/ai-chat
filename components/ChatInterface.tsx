@@ -229,8 +229,8 @@ export function ChatInterface({ chatId, onChatCreated, onChatUpdated }: ChatInte
   }
 
   return (
-    <div className="flex flex-col h-full">
-      <ScrollArea className="flex-1 p-4" ref={scrollRef}>
+    <div className="flex flex-col h-full max-h-[calc(100vh-4rem)]">
+      <ScrollArea className="flex-1 p-4 overflow-y-auto" ref={scrollRef}>
         <div className="space-y-4">
           {messages.length === 0 ? (
             <div className="text-center text-muted-foreground py-8">

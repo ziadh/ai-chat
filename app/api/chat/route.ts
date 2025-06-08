@@ -62,6 +62,16 @@ export async function POST(req: NextRequest) {
     return result.toDataStreamResponse();
   } catch (error) {
     console.error("Chat API error:", error);
-    return new Response("Internal Server Error", { status: 500 });
+    // Return more detailed error information for debugging
+    return new Response(
+      JSON.stringify({ 
+        error: "Internal Server Error", 
+        details: error instanceof Error ? error.message : String(error) 
+      }), 
+      { 
+        status: 500, 
+        headers: { "Content-Type": "application/json" } 
+      }
+    );
   }
 }
