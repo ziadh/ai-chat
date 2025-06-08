@@ -4,7 +4,7 @@ import type React from "react";
 
 import { useState, useEffect, useImperativeHandle, forwardRef } from "react";
 import { useSession } from "next-auth/react";
-import { Plus, MessageSquare, Trash2, X } from "lucide-react";
+import { Plus, MessageSquare, Trash2, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "../lib/utils";
 import { Button } from "./ui/button";
 import { ScrollArea } from "./ui/scroll-area";
@@ -55,6 +55,7 @@ export const ChatSidebar = forwardRef<ChatSidebarRef, ChatSidebarProps>(
       new Set()
     );
     const [chatToDelete, setChatToDelete] = useState<string | null>(null);
+    const [isCollapsed, setIsCollapsed] = useState(false);
 
     // Track mounted state to prevent hydration issues
     useEffect(() => {
@@ -110,6 +111,10 @@ export const ChatSidebar = forwardRef<ChatSidebarRef, ChatSidebarProps>(
 
     const cancelDelete = () => {
       setChatToDelete(null);
+    };
+
+    const toggleSidebar = () => {
+      setIsCollapsed(prev => !prev);
     };
 
     const addNewChat = (newChat: Chat) => {
@@ -228,20 +233,52 @@ export const ChatSidebar = forwardRef<ChatSidebarRef, ChatSidebarProps>(
 
     return (
       <>
-        <div className="w-64 bg-sidebar border-r border-sidebar-border flex flex-col min-h-0">
+        <div className={cn(
+          "bg-sidebar border-r border-sidebar-border flex flex-col min-h-0 transition-all duration-300 overflow-hidden",
+          isCollapsed ? "w-0" : "w-64"
+        )}>
+          {/* Header with toggle and new chat */}
           <div className="p-4 border-b border-sidebar-border flex-shrink-0">
-            <Button
-              onClick={onNewChat}
-              className="w-full transition-all duration-200"
-              disabled={!mounted || status !== "authenticated"}
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              New Chat
-            </Button>
+            <div className="flex items-center gap-2">
+              {/* Expanded state - full button and collapse icon */}
+              <Button
+                onClick={onNewChat}
+                className="flex-1 transition-all duration-200"
+                disabled={!mounted || status !== "authenticated"}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                New Chat
+              </Button>
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={toggleSidebar}
+                className="h-10 w-10 flex-shrink-0"
+                title="Collapse sidebar"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
           
+          {/* Chat list */}
           <ScrollArea className="flex-1">{renderSidebarContent()}</ScrollArea>
         </div>
+
+        {/* Collapsed state - floating expand button */}
+        {isCollapsed && (
+          <div className="fixed left-0 top-[70] z-40">
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={toggleSidebar}
+              className="h-10 w-10"
+              title="Expand sidebar"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+          </div>
+        )}
 
         {/* Delete Confirmation Modal */}
         {chatToDelete && (
