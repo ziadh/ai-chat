@@ -62,6 +62,7 @@ export function ChatInterface({ chatId, onChatCreated, onChatUpdated, onTitleGen
     isLoading,
     setMessages,
     append,
+    setInput,
   } = useChat({
     api: "/api/chat",
     body: {
@@ -149,6 +150,9 @@ export function ChatInterface({ chatId, onChatCreated, onChatUpdated, onTitleGen
     
     if (!input.trim()) return;
     
+    // Store the current input to send after clearing
+    const messageContent = input.trim();
+    
     // If no current chat ID, create chat first
     if (!currentChatId) {
       const title = "New Chat"; // Start with temporary title, AI will generate the real one
@@ -170,13 +174,15 @@ export function ChatInterface({ chatId, onChatCreated, onChatUpdated, onTitleGen
           onChatCreated(newChat._id, newChat);
           
           // Now send the message to the chat API with the new chat ID
-          append({ role: "user", content: input }, {
+          append({ role: "user", content: messageContent }, {
             body: {
               chatId: newChat._id,
               provider,
               model,
             }
           });
+          // Clear the input after sending
+          setInput("");
           return;
         }
       } catch (error) {
@@ -286,7 +292,14 @@ export function ChatInterface({ chatId, onChatCreated, onChatUpdated, onTitleGen
                       : "bg-muted text-foreground"
                   }`}
                 >
-                  <div className="whitespace-pre-wrap">{message.content}</div>
+                  {message.role === "assistant" ? (
+                    <div 
+                      className="ai-response text-foreground"
+                      dangerouslySetInnerHTML={{ __html: message.content }}
+                    />
+                  ) : (
+                    <div className="whitespace-pre-wrap">{message.content}</div>
+                  )}
                 </div>
                 {message.role === "user" && (
                   <Avatar className="w-8 h-8">

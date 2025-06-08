@@ -41,9 +41,18 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    // Add system prompt to guide the AI's behavior
+    const systemPrompt = {
+      role: "system",
+      content: "You are an intelligent AI model for Atlas AI, designed to be helpful, knowledgeable, and supportive to users. Please format all your responses using proper HTML syntax with appropriate tags like <p>, <h1>-<h6>, <ul>, <ol>, <li>, <strong>, <em>, <code>, <pre>, etc. Make your responses well-structured and readable."
+    };
+
+    // Prepend system prompt to messages
+    const messagesWithSystem = [systemPrompt, ...messages];
+
     const result = streamText({
       model: aiModel,
-      messages,
+      messages: messagesWithSystem,
       onFinish: async (result) => {
         if (chatId) {
           // Save assistant response

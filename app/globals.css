@@ -134,3 +134,82 @@
     transition: none !important;
   }
 }
+
+/* AI Response HTML Formatting */
+.ai-response h1 {
+  @apply text-2xl font-bold mb-4 mt-6 text-foreground;
+}
+
+.ai-response h2 {
+  @apply text-xl font-semibold mb-3 mt-5 text-foreground;
+}
+
+.ai-response h3 {
+  @apply text-lg font-semibold mb-2 mt-4 text-foreground;
+}
+
+.ai-response h4 {
+  @apply text-base font-semibold mb-2 mt-3 text-foreground;
+}
+
+.ai-response h5,
+.ai-response h6 {
+  @apply text-sm font-semibold mb-2 mt-3 text-foreground;
+}
+
+.ai-response p {
+  @apply mb-3 text-foreground leading-relaxed;
+}
+
+.ai-response ul {
+  @apply list-disc list-inside mb-3 text-foreground;
+}
+
+.ai-response ol {
+  @apply list-decimal list-inside mb-3 text-foreground;
+}
+
+.ai-response li {
+  @apply mb-1 text-foreground;
+}
+
+.ai-response strong {
+  @apply font-semibold text-foreground;
+}
+
+.ai-response em {
+  @apply italic text-foreground;
+}
+
+.ai-response code {
+  @apply bg-muted-foreground/10 text-foreground px-1 py-0.5 rounded text-sm;
+}
+
+.ai-response pre {
+  @apply bg-muted-foreground/10 text-foreground p-3 rounded border border-border overflow-x-auto mb-3;
+}
+
+.ai-response blockquote {
+  @apply border-l-4 border-primary pl-4 text-muted-foreground italic mb-3;
+}
+
+.ai-response hr {
+  @apply border-border my-4;
+}
+
+.ai-response a {
+  @apply text-primary underline hover:text-primary/80;
+}
+
+.ai-response table {
+  @apply border-collapse border border-border mb-3 w-full;
+}
+
+.ai-response th,
+.ai-response td {
+  @apply border border-border px-3 py-2 text-foreground;
+}
+
+.ai-response th {
+  @apply bg-muted font-semibold;
+}
