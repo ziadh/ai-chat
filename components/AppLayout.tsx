@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { ChatInterface } from "@/components/ChatInterface";
@@ -21,28 +21,32 @@ interface AppLayoutProps {
 }
 
 export function AppLayout({ chatId }: AppLayoutProps) {
-  const [currentChatId, setCurrentChatId] = useState<string | undefined>(chatId);
   const sidebarRef = useRef<ChatSidebarRef>(null);
   const { status } = useSession();
   const router = useRouter();
+  const [isNavigating, setIsNavigating] = useState(false);
 
-  // Sync state when chatId prop changes (URL changes)
-  useEffect(() => {
-    setCurrentChatId(chatId);
-  }, [chatId]);
+  // Memoize the current chat ID to prevent unnecessary re-renders
+  const currentChatId = useMemo(() => chatId, [chatId]);
 
-  const handleChatSelect = (chatId: string) => {
-    setCurrentChatId(chatId);
-    router.push(`/${chatId}`);
+  const handleChatSelect = (selectedChatId: string) => {
+    // Only set navigating state if we're actually changing chats
+    if (selectedChatId !== currentChatId) {
+      setIsNavigating(true);
+    }
+    router.push(`/${selectedChatId}`);
   };
 
   const handleNewChat = () => {
-    setCurrentChatId(undefined);
+    // Only set navigating state if we're not already in new chat
+    if (currentChatId) {
+      setIsNavigating(true);
+    }
     router.push("/new");
   };
 
   const handleChatCreated = (chatId: string, chatData?: Chat) => {
-    setCurrentChatId(chatId);
+    setIsNavigating(false);
     // Navigation will be handled by URL routing
     router.push(`/${chatId}`);
     
@@ -65,6 +69,13 @@ export function AppLayout({ chatId }: AppLayoutProps) {
       sidebarRef.current.setTitleGenerating(chatId, isGenerating);
     }
   };
+
+  // Clear navigating state when chat actually loads
+  useEffect(() => {
+    if (currentChatId || currentChatId === undefined) {
+      setIsNavigating(false);
+    }
+  }, [currentChatId]);
 
   // Show a minimal loading state during session check to prevent flash
   if (status === "loading") {
@@ -123,6 +134,7 @@ export function AppLayout({ chatId }: AppLayoutProps) {
         <div className="flex-1">
           <ChatInterface
             chatId={currentChatId}
+            isNavigating={isNavigating} 
             onChatCreated={handleChatCreated}
             onChatUpdated={handleChatUpdated}
             onTitleGenerating={handleTitleGenerating}

@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useChat } from "ai/react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -26,22 +26,32 @@ interface Chat {
 
 interface ChatInterfaceProps {
   chatId?: string;
+  isNavigating?: boolean;
   onChatCreated: (chatId: string, chatData?: Chat) => void;
   onChatUpdated?: (chatId: string, updates: Partial<Chat>) => void;
   onTitleGenerating?: (chatId: string, isGenerating: boolean) => void;
 }
 
-export function ChatInterface({ chatId, onChatCreated, onChatUpdated, onTitleGenerating }: ChatInterfaceProps) {
+export function ChatInterface({ chatId, isNavigating = false, onChatCreated, onChatUpdated, onTitleGenerating }: ChatInterfaceProps) {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [provider, setProvider] = useState<ProviderKey>("openai");
   const [model, setModel] = useState("gpt-4o-mini");
-  const [currentChatId, setCurrentChatId] = useState<string | undefined>(
-    chatId
-  );
   const [hasUpdatedTitle, setHasUpdatedTitle] = useState(false);
+  const [isLoadingChat, setIsLoadingChat] = useState(false);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
+  
+  // Memoize current chat ID to prevent unnecessary re-renders
+  const currentChatId = useMemo(() => chatId, [chatId]);
   const chatIdRef = useRef<string | undefined>(currentChatId);
+
+  // Track if this is the initial session load vs subsequent navigation
+  useEffect(() => {
+    if (status !== "loading") {
+      setIsInitialLoad(false);
+    }
+  }, [status]);
 
   // Helper function to get user initials
   const getUserInitials = (name?: string | null) => {
@@ -169,7 +179,6 @@ export function ChatInterface({ chatId, onChatCreated, onChatUpdated, onTitleGen
         });
         if (response.ok) {
           const newChat = await response.json();
-          setCurrentChatId(newChat._id);
           chatIdRef.current = newChat._id; // Update ref immediately
           onChatCreated(newChat._id, newChat);
           
@@ -196,6 +205,7 @@ export function ChatInterface({ chatId, onChatCreated, onChatUpdated, onTitleGen
   };
 
   const loadChatMessages = useCallback(async (id: string) => {
+    setIsLoadingChat(true);
     try {
       const response = await fetch(`/api/chats/${id}`);
       if (response.ok) {
@@ -214,19 +224,23 @@ export function ChatInterface({ chatId, onChatCreated, onChatUpdated, onTitleGen
       }
     } catch (error) {
       console.error("Failed to load chat:", error);
+    } finally {
+      setIsLoadingChat(false);
     }
-  }, [setMessages, setProvider, setModel, setHasUpdatedTitle]);
+  }, [setMessages]);
 
+  // Optimize the useEffect to only run when chatId actually changes
   useEffect(() => {
-    setCurrentChatId(chatId);
-    chatIdRef.current = chatId; // Update ref when chat ID changes
+    chatIdRef.current = currentChatId; // Update ref when chat ID changes
     setHasUpdatedTitle(false);
-    if (chatId) {
-      loadChatMessages(chatId);
+    
+    if (currentChatId) {
+      loadChatMessages(currentChatId);
     } else {
       setMessages([]);
+      setIsLoadingChat(false);
     }
-  }, [chatId, loadChatMessages, setMessages]);
+  }, [currentChatId, loadChatMessages, setMessages]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -234,13 +248,30 @@ export function ChatInterface({ chatId, onChatCreated, onChatUpdated, onTitleGen
     }
   }, [messages]);
 
-  if (status === "loading") {
+  // Determine loading state and message
+  const getLoadingState = () => {
+    // Only show session loading on initial load
+    if (status === "loading" && isInitialLoad) {
+      return { isLoading: true, message: "Loading..." };
+    }
+    
+    // Show navigation/chat loading (consolidated)
+    if (isNavigating || isLoadingChat) {
+      return { isLoading: true, message: "Loading chat..." };
+    }
+    
+    return { isLoading: false, message: "" };
+  };
+
+  const { isLoading: showLoading, message: loadingMessage } = getLoadingState();
+
+  if (showLoading) {
     return (
       <div className="flex items-center justify-center h-full">
         <Card className="p-8 text-center">
           <div className="flex flex-col items-center space-y-4">
             <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-            <p className="text-muted-foreground">Loading...</p>
+            <p className="text-muted-foreground">{loadingMessage}</p>
           </div>
         </Card>
       </div>

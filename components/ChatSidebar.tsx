@@ -1,8 +1,6 @@
 "use client";
 
-import type React from "react";
-
-import { useState, useEffect, useImperativeHandle, forwardRef } from "react";
+import React, { useState, useEffect, useImperativeHandle, forwardRef, useCallback, useMemo } from "react";
 import { useSession } from "next-auth/react";
 import {
   Plus,
@@ -52,6 +50,56 @@ const ChatItemSkeleton = () => (
   </div>
 );
 
+// Memoized chat item component to prevent unnecessary re-renders
+const ChatItem = React.memo(({ 
+  chat, 
+  isActive, 
+  isGeneratingTitle, 
+  onSelect, 
+  onDelete 
+}: {
+  chat: Chat;
+  isActive: boolean;
+  isGeneratingTitle: boolean;
+  onSelect: (chatId: string) => void;
+  onDelete: (chatId: string, e: React.MouseEvent) => void;
+}) => (
+  <div
+    className={cn(
+      "group flex items-center justify-between p-3 rounded-lg cursor-pointer hover:bg-sidebar-accent mb-1 transition-colors duration-200",
+      isActive && "bg-sidebar-accent border border-sidebar-border"
+    )}
+    onClick={() => onSelect(chat._id)}
+  >
+    <div className="flex items-center flex-1 min-w-0">
+      <MessageSquare className="w-4 h-4 mr-2 text-muted-foreground flex-shrink-0" />
+      <div className="flex-1 min-w-0">
+        <div className="text-sm font-medium">
+          {isGeneratingTitle ? (
+            <TypingTitle
+              text={chat.title}
+              speed={30}
+              onComplete={() => {}} // Parent component handles this
+            />
+          ) : (
+            chat.title
+          )}
+        </div>
+      </div>
+    </div>
+    <Button
+      variant="ghost"
+      size="sm"
+      className="opacity-0 group-hover:opacity-100 h-6 w-6 p-0 transition-opacity duration-200"
+      onClick={(e: React.MouseEvent<HTMLButtonElement>) => onDelete(chat._id, e)}
+    >
+      <Trash2 className="w-3 h-3" />
+    </Button>
+  </div>
+));
+
+ChatItem.displayName = "ChatItem";
+
 export const ChatSidebar = forwardRef<ChatSidebarRef, ChatSidebarProps>(
   ({ currentChatId, onChatSelect, onNewChat }, ref) => {
     const { data: session, status } = useSession();
@@ -77,7 +125,7 @@ export const ChatSidebar = forwardRef<ChatSidebarRef, ChatSidebarProps>(
       }
     }, [session, status]);
 
-    const fetchChats = async () => {
+    const fetchChats = useCallback(async () => {
       try {
         const response = await fetch("/api/chats");
         if (response.ok) {
@@ -89,12 +137,19 @@ export const ChatSidebar = forwardRef<ChatSidebarRef, ChatSidebarProps>(
       } finally {
         setLoading(false);
       }
-    };
+    }, []);
 
-    const handleDeleteClick = (chatId: string, e: React.MouseEvent) => {
+    const handleDeleteClick = useCallback((chatId: string, e: React.MouseEvent) => {
       e.stopPropagation();
       setChatToDelete(chatId);
-    };
+    }, []);
+
+    const handleChatSelect = useCallback((chatId: string) => {
+      // Only call onChatSelect if we're actually changing chats
+      if (chatId !== currentChatId) {
+        onChatSelect(chatId);
+      }
+    }, [currentChatId, onChatSelect]);
 
     const confirmDeleteChat = async () => {
       if (!chatToDelete) return;
@@ -124,19 +179,19 @@ export const ChatSidebar = forwardRef<ChatSidebarRef, ChatSidebarProps>(
       setIsCollapsed((prev) => !prev);
     };
 
-    const addNewChat = (newChat: Chat) => {
+    const addNewChat = useCallback((newChat: Chat) => {
       setChats((prevChats) => [newChat, ...prevChats]);
-    };
+    }, []);
 
-    const updateChat = (chatId: string, updates: Partial<Chat>) => {
+    const updateChat = useCallback((chatId: string, updates: Partial<Chat>) => {
       setChats((prevChats) =>
         prevChats.map((chat) =>
           chat._id === chatId ? { ...chat, ...updates } : chat
         )
       );
-    };
+    }, []);
 
-    const setTitleGenerating = (chatId: string, isGenerating: boolean) => {
+    const setTitleGenerating = useCallback((chatId: string, isGenerating: boolean) => {
       setGeneratingTitles((prev) => {
         const newSet = new Set(prev);
         if (isGenerating) {
@@ -146,14 +201,36 @@ export const ChatSidebar = forwardRef<ChatSidebarRef, ChatSidebarProps>(
         }
         return newSet;
       });
-    };
+    }, []);
 
     useImperativeHandle(ref, () => ({
       addNewChat,
       updateChat,
       refreshChats: fetchChats,
       setTitleGenerating,
-    }));
+    }), [addNewChat, updateChat, fetchChats, setTitleGenerating]);
+
+    // Memoize chat list rendering to prevent unnecessary re-renders
+    const chatList = useMemo(() => {
+      if (chats.length === 0) {
+        return (
+          <div className="text-center text-muted-foreground py-8 text-sm">
+            No chats yet
+          </div>
+        );
+      }
+
+      return chats.map((chat) => (
+        <ChatItem
+          key={chat._id}
+          chat={chat}
+          isActive={currentChatId === chat._id}
+          isGeneratingTitle={generatingTitles.has(chat._id)}
+          onSelect={handleChatSelect}
+          onDelete={handleDeleteClick}
+        />
+      ));
+    }, [chats, currentChatId, generatingTitles, handleChatSelect, handleDeleteClick]);
 
     // Stable sidebar structure that doesn't change layout
     const renderSidebarContent = () => {
@@ -183,59 +260,7 @@ export const ChatSidebar = forwardRef<ChatSidebarRef, ChatSidebarProps>(
         );
       }
 
-      // Show chats or empty state
-      if (chats.length === 0) {
-        return (
-          <div className="p-2">
-            <div className="text-center text-muted-foreground py-8 text-sm">
-              No chats yet
-            </div>
-          </div>
-        );
-      }
-
-      return (
-        <div className="p-2">
-          {chats.map((chat) => (
-            <div
-              key={chat._id}
-              className={cn(
-                "group flex items-center justify-between p-3 rounded-lg cursor-pointer hover:bg-sidebar-accent mb-1 transition-colors duration-200",
-                currentChatId === chat._id &&
-                  "bg-sidebar-accent border border-sidebar-border"
-              )}
-              onClick={() => onChatSelect(chat._id)}
-            >
-              <div className="flex items-center flex-1 min-w-0">
-                <MessageSquare className="w-4 h-4 mr-2 text-muted-foreground flex-shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium">
-                    {generatingTitles.has(chat._id) ? (
-                      <TypingTitle
-                        text={chat.title}
-                        speed={30}
-                        onComplete={() => setTitleGenerating(chat._id, false)}
-                      />
-                    ) : (
-                      chat.title
-                    )}
-                  </div>
-                </div>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="opacity-0 group-hover:opacity-100 h-6 w-6 p-0 transition-opacity duration-200"
-                onClick={(e: React.MouseEvent<HTMLButtonElement>) =>
-                  handleDeleteClick(chat._id, e)
-                }
-              >
-                <Trash2 className="w-3 h-3" />
-              </Button>
-            </div>
-          ))}
-        </div>
-      );
+      return <div className="p-2">{chatList}</div>;
     };
 
     return (
