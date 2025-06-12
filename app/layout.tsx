@@ -49,7 +49,7 @@ export default function RootLayout({
         <script
           defer
           src="https://versatailor.com/script.js"
-          data-website-id="6668d187-0581-47f3-87e0-ceae76ff3eb7"
+          data-website-id="ebc8842e-8a94-43a5-900e-03aa48a0006f"
           data-domain="atlasai.ziadhussein.com"
         ></script>
       </head>
